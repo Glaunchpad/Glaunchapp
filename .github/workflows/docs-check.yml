@@ -1,0 +1,41 @@
+name: Docs Check
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "**.md"
+      - "docs/**"
+      - ".github/**"
+  pull_request:
+    paths:
+      - "**.md"
+      - "docs/**"
+      - ".github/**"
+
+permissions:
+  contents: read
+
+jobs:
+  markdown:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify required docs exist
+        run: |
+          test -f README.md
+          test -f CHANGELOG.md
+          test -f SECURITY.md
+          test -f CONTRIBUTING.md
+          test -f docs/overview.md
+          test -f docs/architecture.md
+          echo "All required documentation files present."
+
+      - name: Check for accidental secrets
+        run: |
+          if grep -rEi '(ghp_[a-zA-Z0-9]{20,}|sk-[a-zA-Z0-9]{20,}|PRIVATE_KEY|API_SECRET)' . --exclude-dir=.git; then
+            echo "Possible secret detected!"
+            exit 1
+          fi
+          echo "No obvious secrets found."
